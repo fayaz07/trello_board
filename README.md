@@ -63,7 +63,7 @@ int likes;
 In case of re-odering, here we can just update the `cards` field in `columns` collection and while fetching the data, we can fetch in the order of the ids of that cards, which is not possible in `firestore` as it lacks join query.
 
 ### Screenshots
-<img src="screenshots/home.png" width="35%" height="35%" alt="Home screen" />
-<img src="screenshots/home-add-button.png" width="35%" height="35%" alt="Home screen with add add button" />
-<img src="screenshots/add-col.png" width="35%" height="35%" alt="Add column" />
-<img src="screenshots/add-card.png" width="35%" height="35%" alt="Add card" />
+<img src="screenshots/home.jpg" width="35%" height="35%" alt="Home screen" />
+<img src="screenshots/home-add-button.jpg" width="35%" height="35%" alt="Home screen with add add button" />
+<img src="screenshots/add-col.jpg" width="35%" height="35%" alt="Add column" />
+<img src="screenshots/add-card.jpg" width="35%" height="35%" alt="Add card" />
