@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trello_board/models/card.dart';
-import 'package:trello_board/trello/cards_provider.dart';
+import 'package:trello_board/models/column.dart';
+import 'package:trello_board/providers/cards_provider.dart';
+import 'package:trello_board/trello/card/add_card.dart';
 
 class TColumn extends StatelessWidget {
-  final String columnId;
+  final TColumnModel colData;
 
-  const TColumn({Key key, this.columnId}) : super(key: key);
+  const TColumn({Key key, this.colData}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,7 @@ class TColumn extends StatelessWidget {
       child: SizedBox(
         width: 250.0,
         child: TDragTarget(
-          columnId: columnId,
+          colData: colData,
         ),
       ),
     );
@@ -26,9 +28,9 @@ class TColumn extends StatelessWidget {
 }
 
 class TDragTarget extends StatelessWidget {
-  final String columnId;
+  final TColumnModel colData;
 
-  const TDragTarget({Key key, this.columnId}) : super(key: key);
+  const TDragTarget({Key key, this.colData}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +38,15 @@ class TDragTarget extends StatelessWidget {
     return DragTarget<TCardModel>(
       onWillAccept: (data) {
         // ignore if it's same column
-        return data.columnId != columnId;
+        return data.columnId != colData.id;
       },
       onAccept: (data) {
-        provider.replace(data.columnId, columnId, data.id);
+        provider.replace(data.columnId, colData.id, data.id);
         print(data);
       },
       builder: (context, accept, reject) {
         return TReorderableList(
-          columnId: columnId,
+          colData: colData,
         );
       },
     );
@@ -52,9 +54,9 @@ class TDragTarget extends StatelessWidget {
 }
 
 class TReorderableList extends StatelessWidget {
-  final String columnId;
+  final TColumnModel colData;
 
-  const TReorderableList({Key key, this.columnId}) : super(key: key);
+  const TReorderableList({Key key, this.colData}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -62,24 +64,32 @@ class TReorderableList extends StatelessWidget {
     return Scrollbar(
       child: ReorderableListView(
         header: TRListHeader(
-          columnId: columnId,
+          colData: colData,
         ),
-        scrollController: ScrollController(debugLabel: "$columnId"),
+        scrollController: ScrollController(debugLabel: "${colData.id}"),
         scrollDirection: Axis.vertical,
         onReorder: (c, p) {
           print("$c $p");
-          provider.reorder(columnId, c, p);
+          provider.reorder(colData.id, c, p);
         },
-        children: provider.cards[columnId],
+        children: provider.cards[colData.id],
       ),
     );
   }
 }
 
 class TRListHeader extends StatelessWidget {
-  final String columnId;
+  final TColumnModel colData;
 
-  const TRListHeader({Key key, this.columnId}) : super(key: key);
+  const TRListHeader({Key key, this.colData}) : super(key: key);
+
+  void addCard(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (BuildContext context) => AddCard(colData.id),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,14 +101,11 @@ class TRListHeader extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Column $columnId',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32.0,
-                  fontWeight: FontWeight.bold,
-                ),
+                '${colData.title}',
+                style: Theme.of(context).textTheme.headline6,
               ),
             ),
+            IconButton(icon: Icon(Icons.add), onPressed: () => addCard(context))
           ],
         ),
       ),

@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trello_board/trello/card/card.dart';
-import 'package:trello_board/trello/cards_provider.dart';
+import 'package:trello_board/providers/cards_provider.dart';
 import 'package:trello_board/trello/dashboard.dart';
 
 void main() => runApp(TrelloCards());

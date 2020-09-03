@@ -58,19 +58,33 @@ class TCardContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(data.task),
+              Text(
+                data.task,
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
               SizedBox(height: 4.0),
               Row(
                 children: [
                   IconButton(
-                      icon: Icon(Icons.thumb_up),
+                      icon: Icon(
+                        Icons.thumb_up,
+                        color: Colors.grey,
+                      ),
                       onPressed: () {
                         print("inc likes of ${data.id}");
                       }),
-                  Text("${data.likes}"),
+                  Text("${data.likes}",
+                      style: Theme.of(context).textTheme.bodyText2),
                   SizedBox(width: 16.0),
-                  Icon(Icons.remove_red_eye),
-                  Text("${data.views}"),
+                  Icon(
+                    Icons.remove_red_eye,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(width: 8.0),
+                  Text(
+                    "${data.views}",
+                    style: Theme.of(context).textTheme.bodyText2,
+                  ),
                 ],
               )
             ],
