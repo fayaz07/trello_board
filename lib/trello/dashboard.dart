@@ -26,11 +26,13 @@ class _DashboardState extends State<Dashboard> {
         title: Text('Your dashboard'),
       ),
       body: SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          scrollDirection: Axis.horizontal,
-          children: columns,
-        ),
+        child: provider.loading
+            ? Center(child: CircularProgressIndicator())
+            : ListView(
+                shrinkWrap: true,
+                scrollDirection: Axis.horizontal,
+                children: columns,
+              ),
       ),
     );
   }

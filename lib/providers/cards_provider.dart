@@ -1,35 +1,85 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:trello_board/models/card.dart';
 import 'package:trello_board/models/column.dart';
-import 'package:trello_board/trello/card/card.dart';
+
+final columnsFirestore = FirebaseFirestore.instance.collection("columns");
+// final cardsFirestore = FirebaseFirestore.instance.collection("cards");
 
 class CardsProvider extends ChangeNotifier {
   Map<String, TColumnModel> _columns = Map();
-  Map<String, List<TCard>> _cards = Map();
+  Map<String, List<TCardModel>> _cards = Map();
 
-  void addColumn(String title) {
-    final colId = "${_columns.length + 1}";
-    _columns[colId] = TColumnModel(id: colId, title: title);
-    _cards[colId] = <TCard>[];
+  bool _loading = true;
+
+  bool get loading => _loading;
+
+  set loading(bool value) {
+    _loading = value;
     notifyListeners();
   }
 
-  void addCard(String colId, String task) {
-    if (!_cards.containsKey(colId)) throw "Column doesn't exists";
+  void _fetchColumns() {
+    print("fetching columns");
+    if (_columns.length == 0) {
+      columnsFirestore.get().then((QuerySnapshot snapshot) {
+        if (snapshot.docs.length > 0) {
+          for (var s in snapshot.docs) {
+            var col = TColumnModel.fromJSON(s.data());
+            col.id = s.id;
+            _columns[col.id] = col;
+            final cards = TCardModel.parseJSONList(s.data()["cards"]);
+            _cards[col.id] = cards;
+          }
+          print("After fetching columns ${_columns.length}");
+          _loading = false;
+          notifyListeners();
+        }
+      });
+    }
+  }
+
+  CardsProvider() {
+    _fetchColumns();
+  }
+
+  Future<void> addColumn(String title) async {
+    var column = TColumnModel(title: title);
+    DocumentReference doc = await columnsFirestore.add(column.toJSON());
+    column.id = doc.id;
+    _columns[column.id] = column;
+    _cards[column.id] = <TCardModel>[];
+    notifyListeners();
+  }
+
+  Future<void> addCard(String colId, String task) async {
+    if (!_cards.containsKey(colId))
+      throw "Column with id $colId doesn't exists, $columns";
     var colCards = _cards[colId];
-    colCards.add(TCard(
-        key: Key("Card-$colId-${colCards.length + 1}"),
-        data: TCardModel(
-            id: "${colCards.length + 1}",
-            views: 0,
-            likes: 0,
-            columnId: colId,
-            task: task)));
+    print("adding card to $colId");
+    var card = TCardModel(
+      views: 0,
+      likes: 0,
+      columnId: colId,
+      id: colCards.length + 1,
+      task: task,
+    );
+    colCards.add(card);
+
+    // card.id = doc.id;
     _cards.update(colId, (value) => colCards);
     notifyListeners();
+    await updateCardsInFirestore(colId, colCards);
   }
 
-  void reorder(String column, int oldI, int newI) {
+  Future<void> updateCardsInFirestore(
+      String colId, List<TCardModel> colCards) async {
+    await columnsFirestore
+        .doc(colId)
+        .update({"cards": TCardModel.toJSONList(colCards)});
+  }
+
+  Future<void> reorder(String column, int oldI, int newI) async {
     var list = _cards[column];
     if (newI == list.length) {
       newI = newI - 1;
@@ -39,31 +89,31 @@ class CardsProvider extends ChangeNotifier {
     list.insert(newI, oldChild);
     _cards[column] = list;
     notifyListeners();
+    // await cardsFirestore
+    await updateCardsInFirestore(column, list);
   }
 
-  void replace(String prevColId, String currentColId, String cardId) {
+  Future<void> replace(String prevColId, String currentColId, int cardId) async {
     var oldList = _cards[prevColId];
     var cardToBeRemoved = oldList.firstWhere((element) {
-      return element.data.id == cardId;
+      return element.id == cardId;
     });
     print("Before removing ${oldList.length}");
     oldList.remove(cardToBeRemoved);
+    updateCardsInFirestore(prevColId, oldList);
     print("After removing ${oldList.length}");
 
     var newList = _cards[currentColId];
-    var cardData = cardToBeRemoved.data;
+    var cardData = cardToBeRemoved;
     cardData.columnId = currentColId;
-    var cardWidget = TCard(
-      key: Key("Card-$currentColId-${newList.length}"),
-      data: cardData,
-    );
-    newList.add(cardWidget);
+    newList.add(cardData);
+    updateCardsInFirestore(currentColId, newList);
     notifyListeners();
   }
 
-  Map<String, List<TCard>> get cards => _cards;
+  Map<String, List<TCardModel>> get cards => _cards;
 
-  set cards(Map<String, List<TCard>> value) {
+  set cards(Map<String, List<TCardModel>> value) {
     _cards = value;
     notifyListeners();
   }

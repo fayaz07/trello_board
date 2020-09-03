@@ -4,6 +4,7 @@ import 'package:trello_board/models/card.dart';
 import 'package:trello_board/models/column.dart';
 import 'package:trello_board/providers/cards_provider.dart';
 import 'package:trello_board/trello/card/add_card.dart';
+import 'package:trello_board/trello/card/card.dart';
 
 class TColumn extends StatelessWidget {
   final TColumnModel colData;
@@ -72,7 +73,17 @@ class TReorderableList extends StatelessWidget {
           print("$c $p");
           provider.reorder(colData.id, c, p);
         },
-        children: provider.cards[colData.id],
+        children: List.generate(
+          provider.cards[colData.id]?.length ?? 0,
+          (index) {
+            final card = provider.cards[colData.id][index];
+
+            return TCard(
+              key: Key("Card-${card.columnId}-${index + 1}"),
+              data: card,
+            );
+          },
+        ),
       ),
     );
   }

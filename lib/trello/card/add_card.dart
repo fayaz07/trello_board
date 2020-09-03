@@ -14,15 +14,19 @@ class AddCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<CardsProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('New Card'),
       ),
-      body: _body(context),
+      body: provider.loading
+          ? Center(child: CircularProgressIndicator())
+          : _body(context, provider),
     );
   }
 
-  Widget _body(BuildContext context) => Column(
+  Widget _body(BuildContext context, CardsProvider provider) => Column(
         children: [
           Card(
             elevation: 4.0,
@@ -37,7 +41,7 @@ class AddCard extends StatelessWidget {
             color: Colors.white,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4.0)),
-            onPressed: () => _save(context),
+            onPressed: () => _save(context, provider),
             child: Text(Strings.ADD_CARD),
           )
         ],
@@ -65,12 +69,12 @@ class AddCard extends StatelessWidget {
     return "please enter a valid task";
   }
 
-  void _save(BuildContext context) {
+  Future<void> _save(BuildContext context, CardsProvider provider) async {
     if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
-
-    Provider.of<CardsProvider>(context, listen: false)
-        .addCard(columnId, _cardTask);
+    provider.loading = true;
+    await provider.addCard(columnId, _cardTask);
+    provider.loading = false;
     Navigator.of(context).pop();
   }
 }
